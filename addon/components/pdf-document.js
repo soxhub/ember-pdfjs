@@ -39,17 +39,17 @@ const { Promise } = Ember.RSVP;
 
 const $window = Ember.$(window);
 
-const getCurrentIndex = function(event, pageHeight) {
+const getCurrentIndex = function(event, $scrollElement, pageHeight) {
   let target = event && event.currentTarget;
-  let scrollTop = window.pageYOffset || target && target.scrollTop || 0;
+  let scrollTop = $scrollElement.scrollTop() || target && target.scrollTop || 0;
   let currentIndex = Math.round(scrollTop / (pageHeight + 5));
 
   return currentIndex;
 };
 
 let lastScrollTop;
-const getDirection = function() {
-  let scrollTop = window.pageYOffset;
+const getDirection = function($scrollElement) {
+  let scrollTop = $scrollElement.scrollTop();
   let direction;
 
   if (scrollTop > lastScrollTop) {
@@ -150,6 +150,16 @@ export default Ember.Component.extend({
   },
 
   /**
+  * Returns the scroll element if set, otherwise defaults to $window
+  * This is so the viewer correctly responds to scroll events on pos: fixed layouts
+  * IE, scrollable div
+  */
+  _getScrollElement: function() {
+    // wrap scrollElement in $, so accepts any qualified element (string, jq, dom)
+    return get(this, 'scrollElement') ? $(get(this, 'scrollElement')) : $window;
+  },
+
+  /**
   * Event Binding
   * Hook that tears down scroll binding
   *
@@ -157,9 +167,10 @@ export default Ember.Component.extend({
   * @return void
   */
   willDestroyElement: function() {
-    var $scrollElement = testing ? $('#ember-testing-container') : $window;
+    var $scrollElement = testing ? $('#ember-testing-container') : this._getScrollElement();
+    var $resizeElement = testing ? $('#ember-testing-container') : $window;
     $scrollElement.off('scroll.' + get(this, 'elementId'));
-    $scrollElement.off('resize.' + get(this, 'elementId'));
+    $resizeElement.off('resize.' + get(this, 'elementId'));
   },
 
   /**
@@ -172,9 +183,10 @@ export default Ember.Component.extend({
   * @return void
   */
   _onScroll: function() {
-    var $scrollElement = testing ? $('#ember-testing-container') : $window;
+    var $scrollElement = testing ? $('#ember-testing-container') : this._getScrollElement();
+    var $resizeElement = testing ? $('#ember-testing-container') : $window;
     $scrollElement.on('scroll.' + get(this, 'elementId'), bind(this, this._whenUserScrolls));
-    $scrollElement.on('resize.' + get(this, 'elementId'), bind(this, this._whenWindowResizes));
+    $resizeElement.on('resize.' + get(this, 'elementId'), bind(this, this._whenWindowResizes));
   },
 
   /**
@@ -190,13 +202,13 @@ export default Ember.Component.extend({
 
     var currentIndex, direction, lowerPages, upperPages;
 
-    currentIndex = getCurrentIndex(event, get(this, 'pageHeight'));
+    currentIndex = getCurrentIndex(event, this._getScrollElement(), get(this, 'pageHeight'));
 
     // here we are saying that if the user is scrolling upward, then
     // we will load 5 pages above where the user is scrolling so they
     // can experience a seemless rendering when scrolling quickly. Vise
     // versa for scrolling downward.
-    direction = getDirection();
+    direction = getDirection(this._getScrollElement());
     switch(direction) {
       case 'up':
         lowerPages = 2;
@@ -238,7 +250,7 @@ export default Ember.Component.extend({
   */
   _whenWindowResizes: function() {
 
-    var pageIndex = getCurrentIndex(null, get(this, 'pageHeight'));
+    var pageIndex = getCurrentIndex(null, this._getScrollElement(), get(this, 'pageHeight'));
     set(this, 'pageIndex', pageIndex);
 
     var pages = get(this, 'pages');

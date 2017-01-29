@@ -32,43 +32,6 @@ import Ember from 'ember';
 import layout from '../templates/components/pdf-document-legacy';
 import PDFDocumentComponent from './pdf-document';
 
-const {
-  get,
-  set,
-  $,
-  computed: { reads }
-} = Ember;
-
-const bind = Ember.run.bind;
-const { Promise } = Ember.RSVP;
-
-const $window = Ember.$(window);
-
-const getCurrentIndex = function(event, pageHeight) {
-  let target = event && event.currentTarget;
-  let scrollTop = window.pageYOffset || target && target.scrollTop || 0;
-  let currentIndex = Math.round(scrollTop / (pageHeight + 5));
-
-  return currentIndex;
-};
-
-let lastScrollTop;
-const getDirection = function() {
-  let scrollTop = window.pageYOffset;
-  let direction;
-
-  if (scrollTop > lastScrollTop) {
-    direction = 'down';
-  }
-  else {
-    direction = 'up';
-  }
-
-  lastScrollTop = scrollTop;
-
-  return  direction;
-};
-
 /**
 *  Test hooks so tests know when all the async calls in this component have
 *  been resolved.
