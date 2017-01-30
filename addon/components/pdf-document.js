@@ -275,12 +275,10 @@ export default Ember.Component.extend({
 
     Ember.run.scheduleOnce('afterRender', this, () => {
 
-      // Move to host app?
-      var token = Ember.$.cookie ? Ember.$.cookie('auth_token') : 'No Cookie!';
+      // @todo: need a way for the host app to specify ajax arguments
 
       var docInitParams = {
           url: get(this, 'src'),
-          httpHeaders: { "Authorization": `Basic ${token}` }
       };
 
       this._onScroll();
