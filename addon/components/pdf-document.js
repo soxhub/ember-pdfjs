@@ -133,6 +133,16 @@ export default Ember.Component.extend({
   */
   pdfContext: null,
 
+
+  /**
+  * The pages ember array.  Initialized here for compatibility with Ember <= 1.12.2
+  *
+  * @property
+  * @default null
+  */
+  pages: Ember.A(),
+
+
   /**
   * Hook that runs when component initializes
   *
@@ -219,9 +229,7 @@ export default Ember.Component.extend({
         upperPages = 2;
     }
 
-    var pages = get(this, 'pages');
-
-    pages = pages.map((page, index) => {
+    get(this, 'pages').forEach((page, index) => {
       // if this pages index is 5 above or 2 below the currentIndex
       // then we will set isActive so the pdf-page renders its pdf
       // content, and will set false if not so pdf-page removes its
@@ -232,11 +240,7 @@ export default Ember.Component.extend({
       else {
         set(page, 'isActive', false);
       }
-
-      return page;
     });
-
-    set(this, 'pages', pages);
   },
 
   /**
@@ -253,16 +257,11 @@ export default Ember.Component.extend({
     var pageIndex = getCurrentIndex(null, this._getScrollElement(), get(this, 'pageHeight'));
     set(this, 'pageIndex', pageIndex);
 
-    var pages = get(this, 'pages');
-
-    pages = pages.map((page) => {
+    get(this, 'pages').forEach((page) => {
       if (get(page, 'isActive')) {
         set(page, 'resize', true);
       }
-      return page;
     });
-
-    set(this, 'pages', pages);
   },
 
   /**
@@ -393,10 +392,10 @@ export default Ember.Component.extend({
     return new Promise((resolve/*, reject*/) => {
       // set initial pages to render
 
-      pages = pages.map((page, index) => {
+      pages = Ember.A(pages.map((page, index) => {
         if (index < 3) { set(page, 'isActive', true); }
         return page;
-      });
+      }));
 
       set(this, 'pages', pages);
 
@@ -455,11 +454,9 @@ export default Ember.Component.extend({
   */
   _setPageHeight: Ember.observer('pageHeight', function() {
     Ember.run(() => {
-      var pages = get(this, 'pages');
 
-      pages = pages.map((page) => {
+      get(this, 'pages').forEach((page) => {
         set(page, 'height', get(this, 'pageHeight'));
-        return page;
       });
 
       if (get(this, 'resize')) {
@@ -467,8 +464,6 @@ export default Ember.Component.extend({
         var page = this.$().children()[pageIndex];
         page.scrollIntoView();
       }
-
-      set(this, 'pages', pages);
 
       if (testing) {
         finishedLoading();
